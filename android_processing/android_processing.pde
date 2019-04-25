@@ -6,6 +6,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
+import oscP5.*;
+import netP5.*;
 
 Context context;
 SensorManager manager;
@@ -18,6 +20,10 @@ float easing = 0.6;
 float azimuth;
 float pitch;
 float roll;
+
+
+OscP5 oscP5;
+NetAddress myAddress;
 
 void setup() {
   fullScreen(P2D);
@@ -38,6 +44,10 @@ void setup() {
   magnetometer  = manager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
   manager.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
   manager.registerListener(listener, magnetometer, SensorManager.SENSOR_DELAY_NORMAL);
+
+
+  oscP5 = new OscP5(this, 1234);//自分のポート番号
+  myAddress = new NetAddress("192.168.100.100", 5555);//IPaddress,相手のポート番号;
 }
 
 void draw() {
@@ -85,6 +95,12 @@ class SensorListener implements SensorEventListener {
       azimuth += easing * (orientation[0] - azimuth);
       pitch += easing * (orientation[1] - pitch);
       roll += easing * (orientation[2] - roll);
+
+      OscMessage myMessage = new OscMessage("/a");
+      myMessage.add(azimuth);
+      myMessage.add(pitch);
+      myMessage.add(roll);
+      oscP5.send(myMessage, myAddress);
     }
   }
   public void onAccuracyChanged(Sensor sensor, int accuracy) {
