@@ -29,7 +29,7 @@ void setup() {
   textSize(fontSize);
   textAlign(LEFT, TOP);
   stroke(255);
-
+  frameRate(10);
 
   context = getContext();  
   listener = new SensorListener();
