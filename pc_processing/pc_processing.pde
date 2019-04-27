@@ -1,7 +1,15 @@
 import oscP5.*;
 import netP5.*;
 
+import java.io.*;
+import java.awt.image.*;
+import javax.imageio.*;
+import processing.video.*;
+
+Capture camera;
 OscP5 oscP5;
+NetAddress myAddress;
+
 
 float azimuth;
 float pitch;
@@ -17,8 +25,17 @@ void setup() {
   stroke(255);
   frameRate(10);
 
-  size(500, 500);
-  oscP5 = new OscP5(this, 5555);//自分のポート番号
+  camera = new Capture(this, 640, 480, 30); // Captureオブジェクトを生成
+  camera.start();
+
+  size(640, 480);
+
+  OscProperties myProperties = new OscProperties();
+  myProperties.setDatagramSize(100000); 
+  myProperties.setListeningPort(1222);  //自分のポート番号
+
+  oscP5 = new OscP5(this, myProperties);
+  myAddress = new NetAddress("192.168.100.118", 1234);//IPaddress,相手のポート番号;
   oscP5.plug(this, "getData", "/a");//getDta:受け取る関数
 }
 
@@ -26,11 +43,15 @@ public void getData(float a, float p, float r) {
   azimuth = a;
   pitch = p;
   roll = r;
+
+  //println("received");
 }
 
 
 void draw() {
   background(0);
+
+  image(camera, 0, 0); // 画面に表示
 
   String dispText =
     "---------- Orientation --------\n" +
@@ -38,4 +59,41 @@ void draw() {
     String.format( "Pitch\n\t%f\n", degrees(pitch)) +
     String.format( "Roll\n\t%f\n", degrees(roll));
   text( dispText, 0, 0, width, height);
+}
+
+
+//カメラの映像が更新されるたびに、最新の映像を読み込む
+void captureEvent(Capture camera) {
+  camera.read();
+  broadcast(camera);
+}
+
+
+void broadcast(PImage img) {
+  img.loadPixels();
+
+  BufferedImage bimg = new BufferedImage(img.width, img.height, BufferedImage.TYPE_INT_RGB);
+  bimg.setRGB(0, 0, img.width, img.height, img.pixels, 0, img.width);
+
+  ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+  try {
+    ImageIO.write(bimg, "jpg", new BufferedOutputStream(baos));
+  }
+  catch (IOException e) {
+    e.printStackTrace();
+  }
+
+  OscMessage myMessage = new OscMessage("/b");
+  //myMessage.add(baos.toByteArray());
+  myMessage.add(11);
+
+  if (myAddress!=null) {
+    oscP5.send(myMessage, myAddress);
+    //println("send");
+  } else {
+    println("null");
+  }
+
+  //udp.send(baos.toByteArray(), IP, PORT);
 }
