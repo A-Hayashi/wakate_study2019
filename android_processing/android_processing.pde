@@ -8,6 +8,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import oscP5.*;
 import netP5.*;
+import android.os.AsyncTask;
 
 Context context;
 SensorManager manager;
@@ -96,13 +97,45 @@ class SensorListener implements SensorEventListener {
       pitch += easing * (orientation[1] - pitch);
       roll += easing * (orientation[2] - roll);
 
-      OscMessage myMessage = new OscMessage("/a");
-      myMessage.add(azimuth);
-      myMessage.add(pitch);
-      myMessage.add(roll);
-      oscP5.send(myMessage, myAddress);
+      SendAsyncTask task = new SendAsyncTask();
+      task.execute(azimuth, pitch, roll);
     }
   }
   public void onAccuracyChanged(Sensor sensor, int accuracy) {
+  }
+}
+
+public class SendAsyncTask extends AsyncTask<Float, Integer, Boolean> {
+
+  @Override
+    protected void onPreExecute() {
+  }
+
+  @Override
+    protected Boolean doInBackground(Float... params) {
+
+    float azimuth = params[0];
+    float pitch = params[1];
+    float roll = params[2];
+
+    OscMessage myMessage = new OscMessage("/a");
+    myMessage.add(azimuth);
+    myMessage.add(pitch);
+    myMessage.add(roll);
+
+    if (myAddress!=null) {
+      oscP5.send(myMessage, myAddress);
+    }
+
+    return true;
+  }
+
+  @Override
+    protected void onProgressUpdate(Integer... progress) {
+    // このサンプルでは progress[0] が進捗.
+  }
+
+  @Override
+    protected void onPostExecute(Boolean result) {
   }
 }
