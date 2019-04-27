@@ -1,24 +1,33 @@
 import oscP5.*;
 import netP5.*;
- 
+
 OscP5 oscP5;
- 
+
 float azimuth;
 float pitch;
 float roll;
 
-void setup(){
+void setup() {
+
+  float fontSize;
+  //文字サイズ、文字位置指定
+  fontSize = 24;
+  textSize(fontSize);
+  textAlign(LEFT, TOP);
+  stroke(255);
+  frameRate(10);
+
   size(500, 500);
   oscP5 = new OscP5(this, 5555);//自分のポート番号
-  oscP5.plug(this,"getData","/a");//getDta:受け取る関数
+  oscP5.plug(this, "getData", "/a");//getDta:受け取る関数
 }
- 
+
 public void getData(float a, float p, float r) {
   azimuth = a;
   pitch = p;
   roll = r;
 }
- 
+
 
 void draw() {
   background(0);
