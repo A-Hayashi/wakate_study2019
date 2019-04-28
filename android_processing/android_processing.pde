@@ -1,6 +1,3 @@
-// Based on the compass example from Rolf van Gelder.
-// http://cagewebdev.com/index.php/android-processing-examples/
-
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
@@ -22,7 +19,6 @@ Sensor accelerometer;
 Sensor magnetometer;
 
 float easing = 0.6;
-
 float azimuth;
 float pitch;
 float roll;
@@ -52,16 +48,9 @@ void setup() {
   manager.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
   manager.registerListener(listener, magnetometer, SensorManager.SENSOR_DELAY_NORMAL);
 
-  int  height= 640;
-  int  width = 480;
+  println(height);
+  println(width);
   video = createImage(height, width, RGB);
-  //color pink = color(255, 102, 204);
-  //loadPixels();
-  //for (int i = 0; i < (width*height/2)-width/2; i++) {
-  //  pixels[i] = pink;
-  //}
-  //updatePixels();
-
 
   OscProperties myProperties = new OscProperties();
   myProperties.setDatagramSize(100000); 
@@ -71,11 +60,7 @@ void setup() {
   oscP5.plug(this, "getData", "/b");//getDta:受け取る関数
 }
 
-
-public void getData(int data) {
-
-  video.loadPixels();
-
+public void getData(byte[] data) {
   //ByteArrayInputStream bais = new ByteArrayInputStream(data);
 
   //try {
@@ -86,17 +71,20 @@ public void getData(int data) {
   //}
 
   //video.updatePixels();
-  println("received");
-  println(data);
+  println(data[0]);
+  println(data[1]);
+  println(data[2]);
+  println(data[3]);
 }
+
 
 
 void draw() {
   background(0);
 
-  //if (video!=null) {
-  //  image(video, 0, 0);
-  //}
+  if (video!=null) {
+    //image(video, 0, 0);  //The pixels array is null.になる
+  }
 
   String dispText =
     "---------- Orientation --------\n" +

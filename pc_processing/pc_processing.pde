@@ -25,10 +25,10 @@ void setup() {
   stroke(255);
   frameRate(10);
 
-  camera = new Capture(this, 640, 480, 30); // Captureオブジェクトを生成
-  camera.start();
-
   size(640, 480);
+
+  camera = new Capture(this, width, height, 30); // Captureオブジェクトを生成
+  camera.start();
 
   OscProperties myProperties = new OscProperties();
   myProperties.setDatagramSize(100000); 
@@ -74,7 +74,6 @@ void broadcast(PImage img) {
 
   BufferedImage bimg = new BufferedImage(img.width, img.height, BufferedImage.TYPE_INT_RGB);
   bimg.setRGB(0, 0, img.width, img.height, img.pixels, 0, img.width);
-
   ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
   try {
@@ -84,16 +83,13 @@ void broadcast(PImage img) {
     e.printStackTrace();
   }
 
+  byte[] bytes = baos.toByteArray();
   OscMessage myMessage = new OscMessage("/b");
-  //myMessage.add(baos.toByteArray());
-  myMessage.add(11);
+  myMessage.add(bytes);
 
   if (myAddress!=null) {
     oscP5.send(myMessage, myAddress);
-    //println("send");
   } else {
     println("null");
   }
-
-  //udp.send(baos.toByteArray(), IP, PORT);
 }
