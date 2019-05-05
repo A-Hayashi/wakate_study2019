@@ -101,9 +101,12 @@ void setup() {
 public void getData(byte[] data) {
   ByteArrayInputStream bis=new ByteArrayInputStream(data); 
   Bitmap bimg = BitmapFactory.decodeStream(bis); 
-  video=new PImage(bimg.getWidth(), bimg.getHeight(), PConstants.RGB);
-  bimg.getPixels(video.pixels, 0, video.width, 0, 0, video.width, video.height);
-  video.updatePixels();
+
+  synchronized(this) {
+    video=new PImage(bimg.getWidth(), bimg.getHeight(), PConstants.RGB);
+    bimg.getPixels(video.pixels, 0, video.width, 0, 0, video.width, video.height);
+    video.updatePixels();
+  }
 }
 
 void draw() {
@@ -112,7 +115,10 @@ void draw() {
   background(0);
 
   if (video!=null) {
-    PImage video_disp = video.get();
+    PImage video_disp;
+    synchronized(this) {
+      video_disp = video.get();
+    }
     image(video_disp, 0, 0, height, width);
   } else {
     println("video is null");
