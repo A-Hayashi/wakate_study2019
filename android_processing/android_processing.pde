@@ -1,3 +1,4 @@
+import android.app.Activity;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
@@ -8,15 +9,15 @@ import netP5.*;
 import android.os.AsyncTask;
 
 import java.io.*;
-import java.awt.image.*;
-import javax.imageio.*;
-import processing.video.*;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
-Context context;
-SensorManager manager;
-SensorListener listener;
-Sensor accelerometer;
-Sensor magnetometer;
+float[] accelerometerValues  = new float[3];
+float[] magneticValues = new float[3];
+
+Activity      act;
+SensorManager mSensor = null;
+SensorCatch   sensorCatch = null;
 
 float easing = 0.6;
 float azimuth;
@@ -24,106 +25,26 @@ float pitch;
 float roll;
 
 PImage video;
-
 OscP5 oscP5;
 NetAddress myAddress;
 
-void setup() {
-  fullScreen(P2D);
-  orientation(PORTRAIT);
+class SensorCatch implements SensorEventListener {
+  public void onSensorChanged(SensorEvent sensorEvent) {
+    float[] I = new float[16];
+    float[] R = new float[16];
+    float orientation[] = new float[3]; 
 
-  float fontSize;
-  //文字サイズ、文字位置指定
-  fontSize = 24 * displayDensity;
-  textSize(fontSize);
-  textAlign(LEFT, TOP);
-  stroke(255);
-  frameRate(10);
+    switch(sensorEvent.sensor.getType()) {
 
-  context = getContext();  
-  listener = new SensorListener();
-  manager = (SensorManager)context.getSystemService(Context.SENSOR_SERVICE);
-  accelerometer = manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-  magnetometer  = manager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-  manager.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-  manager.registerListener(listener, magnetometer, SensorManager.SENSOR_DELAY_NORMAL);
-
-  println(height);
-  println(width);
-  video = createImage(height, width, RGB);
-
-  OscProperties myProperties = new OscProperties();
-  myProperties.setDatagramSize(100000); 
-  myProperties.setListeningPort(1234);  //自分のポート番号
-  oscP5 = new OscP5(this, myProperties);//自分のポート番号
-  myAddress = new NetAddress("192.168.100.100", 1222);//IPaddress,相手のポート番号;
-  oscP5.plug(this, "getData", "/b");//getDta:受け取る関数
-}
-
-public void getData(byte[] data) {
-  //ByteArrayInputStream bais = new ByteArrayInputStream(data);
-
-  //try {
-  //  ImageIO.read(bais).getRGB(0, 0, video.width, video.height, video.pixels, 0, video.width);
-  //}
-  //catch (Exception e) {
-  //  e.printStackTrace();
-  //}
-
-  //video.updatePixels();
-  println(data[0]);
-  println(data[1]);
-  println(data[2]);
-  println(data[3]);
-}
-
-
-
-void draw() {
-  background(0);
-
-  if (video!=null) {
-    //image(video, 0, 0);  //The pixels array is null.になる
-  }
-
-  String dispText =
-    "---------- Orientation --------\n" +
-    String.format( "Azimuth\n\t%f\n", degrees(azimuth)) +
-    String.format( "Pitch\n\t%f\n", degrees(pitch)) +
-    String.format( "Roll\n\t%f\n", degrees(roll));
-  text( dispText, 0, 0, width, height);
-}
-
-void resume() {
-  if (manager != null) {
-    manager.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-    manager.registerListener(listener, magnetometer, SensorManager.SENSOR_DELAY_NORMAL);
-  }
-}
-
-void pause() {
-  if (manager != null) {
-    manager.unregisterListener(listener);
-  }
-}
-
-class SensorListener implements SensorEventListener {
-  float[] gravity = new float[3];
-  float[] geomagnetic = new float[3];
-  float[] I = new float[16];
-  float[] R = new float[16];
-  float orientation[] = new float[3]; 
-
-  public void onSensorChanged(SensorEvent event) {
-    if (event.accuracy == SensorManager.SENSOR_STATUS_ACCURACY_LOW) return;
-
-    if (event.sensor.getType() ==  Sensor.TYPE_MAGNETIC_FIELD) {
-      arrayCopy(event.values, geomagnetic);
+    case Sensor.TYPE_ACCELEROMETER:
+      accelerometerValues  = sensorEvent.values.clone();
+      break;
+    case Sensor.TYPE_MAGNETIC_FIELD:
+      magneticValues  = sensorEvent.values.clone();
+      break;
     }
-    if (event.sensor.getType() ==  Sensor.TYPE_ACCELEROMETER) {
-      arrayCopy(event.values, gravity);
-    }
-    if (SensorManager.getRotationMatrix(R, I, gravity, geomagnetic)) {
+
+    if (SensorManager.getRotationMatrix(R, I, accelerometerValues, magneticValues)) {
       SensorManager.getOrientation(R, orientation);
       azimuth += easing * (orientation[0] - azimuth);
       pitch += easing * (orientation[1] - pitch);
@@ -133,9 +54,104 @@ class SensorListener implements SensorEventListener {
       task.execute(azimuth, pitch, roll);
     }
   }
-  public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+  public void onAccuracyChanged(Sensor sensor, int i) {
   }
 }
+
+public void onResume() {
+
+  super.onResume();
+
+  act = getActivity();
+  mSensor = (SensorManager)act.getSystemService(Context.SENSOR_SERVICE);
+
+  sensorCatch = new SensorCatch();
+
+  mSensor.registerListener(sensorCatch, mSensor.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
+  mSensor.registerListener(sensorCatch, mSensor.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD), SensorManager.SENSOR_DELAY_NORMAL);
+}
+
+
+public void onPause() {
+  super.onPause();
+  if (mSensor != null) {
+    mSensor.unregisterListener(sensorCatch);
+  }
+}
+
+void setup() {
+
+  float         fontSize;
+  orientation(PORTRAIT);
+
+  fontSize = 24 * displayDensity;
+  textSize(fontSize);
+  textAlign(LEFT, TOP);
+  stroke(255);
+
+  OscProperties myProperties = new OscProperties();
+  myProperties.setDatagramSize(100000); 
+  myProperties.setListeningPort(1234);
+  oscP5 = new OscP5(this, myProperties);
+  myAddress = new NetAddress("192.168.100.100", 1222);
+  oscP5.plug(this, "getData", "/b");
+}
+
+public void getData(byte[] data) {
+  ByteArrayInputStream bis=new ByteArrayInputStream(data); 
+  Bitmap bimg = BitmapFactory.decodeStream(bis); 
+  video=new PImage(bimg.getWidth(), bimg.getHeight(), PConstants.RGB);
+  bimg.getPixels(video.pixels, 0, video.width, 0, 0, video.width, video.height);
+  video.updatePixels();
+}
+
+void draw() {
+  translate(width, 0);
+  rotate(PI/2);
+  background(0);
+
+  if (video!=null) {
+    PImage video_disp = video.get();
+    image(video_disp, 0, 0, height, width);
+  } else {
+    println("video is null");
+  }
+
+  float ut = sqrt(sq(magneticValues[0]) 
+    + sq(magneticValues[1]) 
+    + sq(magneticValues[2]));
+
+  String dispText 
+    = String.format( 
+    "加速度\n X:%s Y:%s Z:%s\n\n"
+    +"地磁気\n X:%s Y:%s Z:%s\n"
+    +"地磁気の大きさ:%s\n\n"
+
+    +"Azimuth:\t%s\t%s\n"
+    +"Pitch:\t%s\t%s\n"
+    +"Roll:\t%s\t%s\n", 
+
+    nfs(accelerometerValues[0], 2, 2), 
+    nfs(accelerometerValues[1], 2, 2), 
+    nfs(accelerometerValues[2], 2, 2), 
+
+    nfs(magneticValues[0], 2, 2), 
+    nfs(magneticValues[1], 2, 2), 
+    nfs(magneticValues[2], 2, 2), 
+    nfs(ut, 2, 2), 
+
+    nfs(azimuth, 2, 2), 
+    nfs(degrees(azimuth), 2, 2), 
+    nfs(pitch, 2, 2), 
+    nfs(degrees(pitch), 2, 2), 
+    nfs(roll, 2, 2), 
+    nfs(degrees(roll), 2, 2)
+    );
+
+  text( dispText, 0, 0, width, height);
+}
+
 
 public class SendAsyncTask extends AsyncTask<Float, Integer, Boolean> {
 
@@ -146,9 +162,9 @@ public class SendAsyncTask extends AsyncTask<Float, Integer, Boolean> {
   @Override
     protected Boolean doInBackground(Float... params) {
 
-    float azimuth = params[0];
-    float pitch = params[1];
-    float roll = params[2];
+    Float azimuth = params[0];
+    Float pitch = params[1];
+    Float roll = params[2];
 
     OscMessage myMessage = new OscMessage("/a");
     myMessage.add(azimuth);
@@ -164,7 +180,6 @@ public class SendAsyncTask extends AsyncTask<Float, Integer, Boolean> {
 
   @Override
     protected void onProgressUpdate(Integer... progress) {
-    // このサンプルでは progress[0] が進捗.
   }
 
   @Override
