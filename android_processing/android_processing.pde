@@ -46,9 +46,15 @@ class SensorCatch implements SensorEventListener {
 
     if (SensorManager.getRotationMatrix(R, I, accelerometerValues, magneticValues)) {
       SensorManager.getOrientation(R, orientation);
-      azimuth += easing * (orientation[0] - azimuth);
-      pitch += easing * (orientation[1] - pitch);
-      roll += easing * (orientation[2] - roll);
+      azimuth += easing * (degrees(orientation[0]) - azimuth);
+      pitch += easing * (degrees(orientation[1]) - pitch);
+      roll += easing * (degrees(orientation[2]) - roll);
+
+      if (azimuth<0) {
+        azimuth = -azimuth+180;
+      } else {
+        azimuth = 180-azimuth;
+      }
 
       SendAsyncTask task = new SendAsyncTask();
       task.execute(azimuth, pitch, roll);
@@ -94,7 +100,7 @@ void setup() {
   myProperties.setDatagramSize(100000); 
   myProperties.setListeningPort(1234);
   oscP5 = new OscP5(this, myProperties);
-  myAddress = new NetAddress("192.168.100.100", 1222);
+  myAddress = new NetAddress("192.168.100.11", 1222);
   oscP5.plug(this, "getData", "/b");
 }
 
@@ -134,9 +140,9 @@ void draw() {
     +"地磁気\n X:%s Y:%s Z:%s\n"
     +"地磁気の大きさ:%s\n\n"
 
-    +"Azimuth:\t%s\t%s\n"
-    +"Pitch:\t%s\t%s\n"
-    +"Roll:\t%s\t%s\n", 
+    +"Azimuth:\t%s\n"
+    +"Pitch:\t%s\n"
+    +"Roll:\t%s\n", 
 
     nfs(accelerometerValues[0], 2, 2), 
     nfs(accelerometerValues[1], 2, 2), 
@@ -148,11 +154,8 @@ void draw() {
     nfs(ut, 2, 2), 
 
     nfs(azimuth, 2, 2), 
-    nfs(degrees(azimuth), 2, 2), 
     nfs(pitch, 2, 2), 
-    nfs(degrees(pitch), 2, 2), 
-    nfs(roll, 2, 2), 
-    nfs(degrees(roll), 2, 2)
+    nfs(roll, 2, 2)
     );
 
   text( dispText, 0, 0, width, height);

@@ -1,47 +1,99 @@
 //#include <Servo.h>
-//#include <Wire.h>
+#include <Wire.h>
 #include <Arduino.h>
 #include "VarSpeedServo.h"
+#include "PS_PAD.h"
+
+#define PS2_SEL 10
+PS_PAD PAD(PS2_SEL);
 
 static const byte PORT_M1  = 0;   //左
-static const byte PORT_M2  = 1;
+static const byte PORT_M2  = 1;   //右
 
 VarSpeedServo ServoPan;
 VarSpeedServo ServoTilt;
 
 void setup() {
   Serial.begin(9600);
-  pinMode(A0, INPUT);
-  pinMode(A1, INPUT);
-  pinMode(A2, INPUT);
-  pinMode(A3, INPUT);
 
   ServoPan.attach(9);
   ServoTilt.attach(10);
 
-  InitDCMotorPort(PORT_M1);
-  InitDCMotorPort(PORT_M2);
+  i2c_init();
+
+//  pinMode(PS2_SEL, OUTPUT);
+//  digitalWrite(PS2_SEL, HIGH);
+//  PAD.init();
+
+  //InitDCMotorPort(PORT_M1);
+  //InitDCMotorPort(PORT_M2);
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-  byte a0 = digitalRead(A0);
-  byte a1 = digitalRead(A1);
-  byte a2 = digitalRead(A2);
-  byte a3 = digitalRead(A3);
+void ps_pad_test()
+{
+  PAD.poll();
+
+  int lx = PAD.read(PS_PAD::ANALOG_LX);
+  int ly = PAD.read(PS_PAD::ANALOG_LY);
+  int rx = PAD.read(PS_PAD::ANALOG_RX);
+  int ry = PAD.read(PS_PAD::ANALOG_RY);
+  int buttons = PAD.read(PS_PAD::BUTTONS);
+
+  Serial.print("LX:");
+  Serial.print(lx);
+  Serial.print("\tLY:");
+  Serial.print(ly);
+  Serial.print("\tRX:");
+  Serial.print(rx);
+  Serial.print("\tRY:");
+  Serial.print(ry);
+  Serial.print("\tBUTTONS:");
+  Serial.print(buttons, HEX);
+  Serial.print("\n");
+}
+
+void servo_motor_test()
+{
+  delay(100);
   ServoPan.write(50, 10);
   ServoTilt.write(50, 10);
   DCMotor(PORT_M1, 50);
   DCMotor(PORT_M2, -50);
   delay(2000);
 
-
   ServoPan.write(100, 50);
   ServoTilt.write(100, 50);
   DCMotor(PORT_M1, -50);
   DCMotor(PORT_M2, 50);
-
   delay(1000);
+}
+
+void motor_test()
+{
+  DCMotor(PORT_M1, 50);
+  DCMotor(PORT_M2, -50);
+  delay(2000);
+  
+  DCMotor(PORT_M1, -50);
+  DCMotor(PORT_M2, 50);
+  delay(1000);
+}
+
+void servo_test()
+{
+  ServoPan.write(50, 10);
+  ServoTilt.write(50, 10);
+  delay(2000);
+
+  ServoPan.write(100, 50);
+  ServoTilt.write(100, 50);
+  delay(1000);
+}
+
+void loop() {
+
+  //servo_test();
+
 }
 
 
@@ -56,7 +108,6 @@ static const byte   DDMDPWMA = 3;  // DC motor driver PRM A
 static const byte   DCMDB1   = 7;  // DC motor driver B1
 static const byte   DCMDB2   = 8;  // DC motor driver B2
 static const byte   DDMDPWMB = 5;  // DC motor driver PRM B
-
 
 void InitDCMotorPort(byte connector)
 {
@@ -135,4 +186,48 @@ void DCMotorPower(byte connector, byte pace)
   int duty = (((int)pace * 255) / 100);
   if (connector == PORT_M1) analogWrite(DDMDPWMA, duty);
   if (connector == PORT_M2) analogWrite(DDMDPWMB, duty);
+}
+
+void i2c_init()
+{
+  Wire.begin(0x25) ;                 // Ｉ２Ｃの初期化、自アドレスを0x20とする
+  Wire.onRequest(requestEvent);     // マスタからのデータ取得要求のコールバック関数登録
+  Wire.onReceive(receiveEvent);     // マスタからのデータ送信対応のコールバック関数登録
+}
+
+
+void receiveEvent(int howMany) {
+  Serial.println("receiveEvent");
+  byte cmd = Wire.read();
+  Serial.print("cmd:");
+  Serial.println(cmd);
+
+  if (cmd == 0x01) {
+    if (howMany == 4) {
+      byte servo = Wire.read();
+      byte angle = Wire.read();
+      byte speed = Wire.read();
+      Serial.print("servo: ");
+      Serial.print(servo);
+      Serial.print(" angle: ");
+      Serial.print(angle);
+      Serial.print(" speed: ");
+      Serial.println(speed);
+      switch (servo) {
+        case 1:
+          ServoPan.write(angle, speed);
+          break;
+        case 2:
+          ServoTilt.write(angle, speed);
+          break;
+        default:
+          break;
+      }
+    }
+  }
+}
+
+// マスターからのリクエストに対するデータ送信
+void requestEvent() {
+  Serial.println("requestEvent");
 }
