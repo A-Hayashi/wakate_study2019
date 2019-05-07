@@ -26,7 +26,7 @@ void rotate_pan(int angle)
     i2c.write(0x01);
     i2c.write(0x01);
     i2c.write(angle);
-    i2c.write(10);
+    i2c.write(20);
     i2c.endTransmission();
   }
   catch(Exception e)
@@ -43,7 +43,7 @@ void rotate_tilt(int angle)
     i2c.write(0x01);
     i2c.write(0x02);
     i2c.write(angle);
-    i2c.write(10);
+    i2c.write(20);
     i2c.endTransmission();
   }
   catch(Exception e)
@@ -127,12 +127,12 @@ void draw() {
   {
     tilt = tilt + 180;
     tilt = Math.min(Math.max(tilt, 0), 180);
-
-    //pan = pan;
-    pan = Math.min(Math.max(pan, 0), 180);
     print("tilt: ");
     print(tilt);
 
+    pan = pan + 180;
+    pan = Math.min(Math.max(pan, 90), 270);
+    pan = 180-(pan-90);
     print(" pan: ");
     println(pan);
   }
