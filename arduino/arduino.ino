@@ -93,7 +93,7 @@ void servo_test()
 void loop() {
 
   //servo_test();
-
+  //ps_pad_test();
 }
 
 
@@ -215,9 +215,11 @@ void receiveEvent(int howMany) {
       Serial.println(speed);
       switch (servo) {
         case 1:
+          ServoPan.attach(9);
           ServoPan.write(angle, speed);
           break;
         case 2:
+          ServoTilt.attach(10);
           ServoTilt.write(angle, speed);
           break;
         default:

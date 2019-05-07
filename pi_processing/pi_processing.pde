@@ -20,39 +20,36 @@ float roll;
 
 void rotate_pan(int angle)
 {
-  i2c.beginTransmission(0x25);
-
   try
   {
+    i2c.beginTransmission(0x25);
     i2c.write(0x01);
     i2c.write(0x01);
     i2c.write(angle);
     i2c.write(10);
+    i2c.endTransmission();
   }
   catch(Exception e)
   {
     i2c.endTransmission();
   }
-
-  i2c.endTransmission();
 }
 
 void rotate_tilt(int angle)
 {
-  i2c.beginTransmission(0x25);
   try
   {
+    i2c.beginTransmission(0x25);
     i2c.write(0x01);
     i2c.write(0x02);
     i2c.write(angle);
     i2c.write(10);
+    i2c.endTransmission();
   }
   catch(Exception e)
   {
     i2c.endTransmission();
   }
-
-  i2c.endTransmission();
 }
 
 void setup() {
@@ -62,7 +59,7 @@ void setup() {
   textSize(fontSize);
   textAlign(LEFT, TOP);
   stroke(255);
-  frameRate(10);
+  frameRate(30);
 
   size(640, 480, P2D);
 
@@ -100,14 +97,17 @@ public void getData(float a, float p, float r) {
 }
 
 PImage video_buf;
+float azimuth_buf;
+float pitch_buf;
+float roll_buf;
 byte cnt = 0;
+
 void draw() {
   cnt++;
   background(0);
-  if (video.available()) {
-    video.read();
-    if (cnt%3==0) {
-
+  if (cnt%3==0) {
+    if (video.available()) {
+      video.read();
       video_buf = video.get();
       video_buf = rotate_180(video_buf);
       thread("broadcast");
@@ -116,35 +116,40 @@ void draw() {
 
   image(video, 0, 0, width, height);
 
-  String dispText;
   synchronized(this) {
-    if (cnt%10==0) {
-      float tilt=roll;
-
-      tilt = tilt + 180;
-      tilt = Math.min(Math.max(tilt, 0), 180);
-
-      //print("tilt: ");
-      //println(tilt);
-      rotate_tilt((int)tilt);
-    }
-    if ((cnt+5)%10==0) {
-      float pan=azimuth;
-
-      pan = pan - 90;
-      pan = Math.min(Math.max(pan, 0), 180);
-
-      print("pan: ");
-      println(pan);
-      rotate_pan((int)pan);
-    }
-
-    dispText =
-      "---------- Orientation --------\n" +
-      String.format( "Azimuth\n\t%f\n", azimuth) +
-      String.format( "Pitch\n\t%f\n", pitch) +
-      String.format( "Roll\n\t%f\n", roll);
+    azimuth_buf = azimuth;
+    pitch_buf = pitch;
+    roll_buf = roll;
   }
+
+  float tilt=roll;
+  float pan=azimuth;
+  {
+    tilt = tilt + 180;
+    tilt = Math.min(Math.max(tilt, 0), 180);
+
+    pan = pan - 90;
+    pan = Math.min(Math.max(pan, 0), 180);
+    print("tilt: ");
+    print(tilt);
+
+    print(" pan: ");
+    println(pan);
+  }
+  
+  if ((cnt+1)%3==0) {
+    rotate_tilt((int)tilt);
+  }
+  if ((cnt+2)%3==0) {
+    rotate_pan((int)pan);
+  }
+
+  String dispText =
+    "---------- Orientation --------\n" +
+    String.format( "Azimuth\n\t%f\n", azimuth) +
+    String.format( "Pitch\n\t%f\n", pitch) +
+    String.format( "Roll\n\t%f\n", roll);
+
   text( dispText, 0, 0, width, height);
 }
 
