@@ -59,7 +59,7 @@ void setup() {
   textSize(fontSize);
   textAlign(LEFT, TOP);
   stroke(255);
-  frameRate(30);
+  frameRate(10);
 
   size(640, 480, P2D);
 
@@ -128,7 +128,7 @@ void draw() {
     tilt = tilt + 180;
     tilt = Math.min(Math.max(tilt, 0), 180);
 
-    pan = pan - 90;
+    //pan = pan;
     pan = Math.min(Math.max(pan, 0), 180);
     print("tilt: ");
     print(tilt);
@@ -136,12 +136,14 @@ void draw() {
     print(" pan: ");
     println(pan);
   }
-  
+
   if ((cnt+1)%3==0) {
     rotate_tilt((int)tilt);
+    //rotate_tilt((int)90);
   }
   if ((cnt+2)%3==0) {
     rotate_pan((int)pan);
+    //rotate_pan((int)90);
   }
 
   String dispText =

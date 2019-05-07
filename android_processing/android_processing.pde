@@ -50,12 +50,6 @@ class SensorCatch implements SensorEventListener {
       pitch += easing * (degrees(orientation[1]) - pitch);
       roll += easing * (degrees(orientation[2]) - roll);
 
-      if (azimuth<0) {
-        azimuth = -azimuth+180;
-      } else {
-        azimuth = 180-azimuth;
-      }
-
       SendAsyncTask task = new SendAsyncTask();
       task.execute(azimuth, pitch, roll);
     }
@@ -114,6 +108,7 @@ public void getData(byte[] data) {
     video.updatePixels();
   }
 }
+
 
 void draw() {
   translate(width, 0);

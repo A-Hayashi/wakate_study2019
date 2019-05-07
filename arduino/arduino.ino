@@ -13,6 +13,11 @@ static const byte PORT_M2  = 1;   //右
 VarSpeedServo ServoPan;
 VarSpeedServo ServoTilt;
 
+int PanAngle = 90;
+int PanSpeed = 10;
+int TiltAngle = 90;
+int TiltSpeed = 10;
+
 void setup() {
   Serial.begin(9600);
 
@@ -21,9 +26,9 @@ void setup() {
 
   i2c_init();
 
-//  pinMode(PS2_SEL, OUTPUT);
-//  digitalWrite(PS2_SEL, HIGH);
-//  PAD.init();
+  //    pinMode(PS2_SEL, OUTPUT);
+  //    digitalWrite(PS2_SEL, HIGH);
+  //    PAD.init();
 
   //InitDCMotorPort(PORT_M1);
   //InitDCMotorPort(PORT_M2);
@@ -73,7 +78,7 @@ void motor_test()
   DCMotor(PORT_M1, 50);
   DCMotor(PORT_M2, -50);
   delay(2000);
-  
+
   DCMotor(PORT_M1, -50);
   DCMotor(PORT_M2, 50);
   delay(1000);
@@ -83,15 +88,33 @@ void servo_test()
 {
   ServoPan.write(50, 10);
   ServoTilt.write(50, 10);
-  delay(2000);
+  delay(5000);
 
   ServoPan.write(100, 50);
   ServoTilt.write(100, 50);
-  delay(1000);
+  delay(10000);
 }
 
-void loop() {
+void servo_control()
+{
+  ServoPan.write(PanAngle, PanSpeed);
+  ServoTilt.write(TiltAngle, TiltSpeed);
+  
+  Serial.print("PanAngle: ");
+  Serial.print(PanAngle);
+  Serial.print("\tPanSpeed: ");
+  Serial.print(PanSpeed);
+  Serial.print("\tTiltAngle: ");
+  Serial.print(TiltAngle);
+  Serial.print("\tTiltSpeed: ");
+  Serial.print(TiltSpeed);
+  Serial.print("\n");
+  delay(200);
+}
 
+
+void loop() {
+  servo_control();
   //servo_test();
   //ps_pad_test();
 }
@@ -197,30 +220,35 @@ void i2c_init()
 
 
 void receiveEvent(int howMany) {
+#ifdef DEBUG
   Serial.println("receiveEvent");
+#endif
   byte cmd = Wire.read();
+#ifdef DEBUG
   Serial.print("cmd:");
   Serial.println(cmd);
-
+#endif
   if (cmd == 0x01) {
     if (howMany == 4) {
       byte servo = Wire.read();
       byte angle = Wire.read();
       byte speed = Wire.read();
+#ifdef DEBUG
       Serial.print("servo: ");
       Serial.print(servo);
       Serial.print(" angle: ");
       Serial.print(angle);
       Serial.print(" speed: ");
       Serial.println(speed);
+#endif
       switch (servo) {
         case 1:
-          ServoPan.attach(9);
-          ServoPan.write(angle, speed);
+          PanAngle = angle;
+          PanSpeed = speed;
           break;
         case 2:
-          ServoTilt.attach(10);
-          ServoTilt.write(angle, speed);
+          TiltAngle = angle;
+          TiltSpeed = speed;
           break;
         default:
           break;
@@ -231,5 +259,7 @@ void receiveEvent(int howMany) {
 
 // マスターからのリクエストに対するデータ送信
 void requestEvent() {
+#ifdef DEBUG
   Serial.println("requestEvent");
+#endif
 }
