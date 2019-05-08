@@ -110,7 +110,7 @@ void servo_control()
   Serial.print(TiltAngle);
   Serial.print("\tTiltSpeed: ");
   Serial.print(TiltSpeed);
-  Serial.print("\n");
+  //  Serial.print("\n");
 }
 
 void motor_control()
@@ -118,11 +118,11 @@ void motor_control()
   DCMotor(PORT_M1, MotorL_Duty);
   DCMotor(PORT_M2, MotorR_Duty);
 
-  //  Serial.print("MotorR_Duty: ");
-  //  Serial.print(MotorR_Duty);
-  //  Serial.print("\tMotorL_Duty: ");
-  //  Serial.print(MotorL_Duty);
-  //  Serial.print("\n");
+  Serial.print("\tMotorR_Duty: ");
+  Serial.print(MotorR_Duty);
+  Serial.print("\tMotorL_Duty: ");
+  Serial.print(MotorL_Duty);
+  Serial.print("\n");
 }
 
 void loop() {
@@ -133,7 +133,6 @@ void loop() {
   //servo_test();
   //ps_pad_test();
 }
-
 
 static const byte BRAKE            = 8;  // Brake
 static const byte COAST            = 9;  // Coast
@@ -166,12 +165,14 @@ void InitDCMotorPort(byte connector)
 
 void DCMotor(byte connector, int rotation)
 {
+#ifdef DEBUG
   if (connector == PORT_M1) {
     Serial.print("LEFT: ");
   } else {
     Serial.print("RIGHT: ");
   }
   Serial.println(rotation);
+#endif
 
   if (rotation > 0) {
     DCMotorControl(connector, NORMAL);

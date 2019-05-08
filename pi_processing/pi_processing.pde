@@ -125,97 +125,100 @@ void setup() {
   oscP5.plug(this, "getCon", "/c");
 }
 
-public void getCon(int _lh_ud, int _lh_rl, int _rh_ud, int _rh_rl) {
+public synchronized void getCon(int _lh_ud, int _lh_rl, int _rh_ud, int _rh_rl) {
   lh_ud = _lh_ud;
   lh_rl= _lh_rl;
   rh_ud= _rh_ud;
   rh_rl= _rh_rl;
-
   //println("received");
 }
 
-public void getData(float a, float p, float r) {
-  synchronized(this) {
-    azimuth = a;
-    pitch = p;
-    roll = r;
-  }
-
+public synchronized void getData(float a, float p, float r) {
+  azimuth = a;
+  pitch = p;
+  roll = r;
   //println("received");
+}
+
+void motor_control(int r, int l) {
+  motor_r(r);
+  motor_l(l);
+}
+
+void servo_control(float tilt, float pan) {
+  rotate_tilt((int)tilt);
+  rotate_pan((int)pan);
+}
+
+float calc_tilt(float in)
+{
+  float tilt;
+  tilt = in + 180;
+  tilt = Math.min(Math.max(tilt, 0), 180);
+  return tilt;
+}
+
+float calc_pan(float in)
+{
+  float pan;
+  pan = in + 180;
+  pan = Math.min(Math.max(pan, 90), 270);
+  pan = 180-(pan-90);
+  return pan;
+}
+
+void video_control(GLCapture v)
+{
+  if (v.available()) {
+    v.read();
+    video_buf = v.get();
+    video_buf = rotate_180(video_buf);
+    thread("broadcast");
+  }
 }
 
 PImage video_buf;
-float azimuth_buf;
-float pitch_buf;
-float roll_buf;
-byte cnt = 0;
-
-void draw() {
-      print("lh_ud: ");
-      print(lh_ud);
-      print(" lh_rl: ");
-      print(lh_rl);
-      print(" rh_ud: ");
-      print(rh_ud);
-      print(" rh_rl: ");
-      println(rh_rl);
-      
-      motor_r(rh_ud);
-      motor_l(lh_ud);
-}
-
-void drawa() {
-
+int cnt = 0;
+synchronized void draw() {
   cnt++;
   background(0);
   if (cnt%3==0) {
-    if (video.available()) {
-      video.read();
-      video_buf = video.get();
-      video_buf = rotate_180(video_buf);
-      thread("broadcast");
-    }
+    video_control(video);
   }
 
-  image(video, 0, 0, width, height);
-
-  synchronized(this) {
-    azimuth_buf = azimuth;
-    pitch_buf = pitch;
-    roll_buf = roll;
-  }
-
-  float tilt=roll;
-  float pan=azimuth;
-  {
-    tilt = tilt + 180;
-    tilt = Math.min(Math.max(tilt, 0), 180);
-    print("tilt: ");
-    print(tilt);
-
-    pan = pan + 180;
-    pan = Math.min(Math.max(pan, 90), 270);
-    pan = 180-(pan-90);
-    print(" pan: ");
-    println(pan);
-  }
-
+  float tilt = calc_tilt(roll);
+  float pan = calc_pan(azimuth);
   if ((cnt+1)%3==0) {
-    rotate_tilt((int)tilt);
-    //rotate_tilt((int)90);
+    servo_control(tilt, pan);
   }
   if ((cnt+2)%3==0) {
-    rotate_pan((int)pan);
-    //rotate_pan((int)90);
+    motor_control(rh_ud, lh_ud);
   }
-
+  
   String dispText =
-    "---------- Orientation --------\n" +
-    String.format( "Azimuth\n\t%f\n", azimuth) +
-    String.format( "Pitch\n\t%f\n", pitch) +
-    String.format( "Roll\n\t%f\n", roll);
+    String.format( "Azimuth:  %f\n", azimuth) +
+    String.format( "Pitch:  %f\n", pitch) +
+    String.format( "Roll:  %f\n", roll)+
+    String.format( "tilt:  %f\n", tilt)+
+    String.format( "pan:  %f\n", pan)+
+    String.format( "lh_ud:  %d\n", lh_ud)+
+    String.format( "lh_rl:  %d\n", lh_rl)+
+    String.format( "rh_ud:  %d\n", rh_ud)+
+    String.format( "rh_ud:  %d\n", rh_rl);
+  //image(video, 0, 0, width, height);
+  //text( dispText, 0, 0, width, height);
 
-  text( dispText, 0, 0, width, height);
+  String dispText2 =
+    String.format( "Azimuth:  %f  ", azimuth) +
+    String.format( "Pitch:  %f  ", pitch) +
+    String.format( "Roll:  %f  ", roll)+
+    String.format( "tilt:  %f  ", tilt)+
+    String.format( "pan:  %f  ", pan)+
+    String.format( "lh_ud:  %d  ", lh_ud)+
+    String.format( "lh_rl:  %d  ", lh_rl)+
+    String.format( "rh_ud:  %d  ", rh_ud)+
+    String.format( "rh_ud:  %d  ", rh_rl);
+  println(dispText2);
 }
 
 void broadcast() {
