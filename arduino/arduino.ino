@@ -13,6 +13,8 @@ static const byte PORT_M2  = 1;   //右
 VarSpeedServo ServoPan;
 VarSpeedServo ServoTilt;
 
+int MotorR_Duty = 0;
+int MotorL_Duty = 0;
 int PanAngle = 90;
 int PanSpeed = 10;
 int TiltAngle = 90;
@@ -30,8 +32,8 @@ void setup() {
   //    digitalWrite(PS2_SEL, HIGH);
   //    PAD.init();
 
-  //InitDCMotorPort(PORT_M1);
-  //InitDCMotorPort(PORT_M2);
+  InitDCMotorPort(PORT_M1);
+  InitDCMotorPort(PORT_M2);
 }
 
 void ps_pad_test()
@@ -99,7 +101,7 @@ void servo_control()
 {
   ServoPan.write(PanAngle, PanSpeed);
   ServoTilt.write(TiltAngle, TiltSpeed);
-  
+
   Serial.print("PanAngle: ");
   Serial.print(PanAngle);
   Serial.print("\tPanSpeed: ");
@@ -109,12 +111,25 @@ void servo_control()
   Serial.print("\tTiltSpeed: ");
   Serial.print(TiltSpeed);
   Serial.print("\n");
-  delay(200);
 }
 
+void motor_control()
+{
+  DCMotor(PORT_M1, MotorL_Duty);
+  DCMotor(PORT_M2, MotorR_Duty);
+
+  //  Serial.print("MotorR_Duty: ");
+  //  Serial.print(MotorR_Duty);
+  //  Serial.print("\tMotorL_Duty: ");
+  //  Serial.print(MotorL_Duty);
+  //  Serial.print("\n");
+}
 
 void loop() {
   servo_control();
+  motor_control();
+  delay(200);
+
   //servo_test();
   //ps_pad_test();
 }
@@ -249,6 +264,29 @@ void receiveEvent(int howMany) {
         case 2:
           TiltAngle = angle;
           TiltSpeed = speed;
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  if (cmd == 0x02) {
+    if (howMany == 3) {
+      byte motor = Wire.read();
+      byte duty = Wire.read();
+#ifdef DEBUG
+      Serial.print("motor: ");
+      Serial.print(motor);
+      Serial.print(" duty: ");
+      Serial.print(duty);
+#endif
+      switch (motor) {
+        case 1:
+          MotorL_Duty = (int)duty - 100;
+          break;
+        case 2:
+          MotorR_Duty = (int)duty - 100;
           break;
         default:
           break;

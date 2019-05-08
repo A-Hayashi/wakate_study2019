@@ -17,6 +17,10 @@ float azimuth;
 float pitch;
 float roll;
 
+int lh_ud;
+int lh_rl;
+int rh_ud;
+int rh_rl;
 
 void rotate_pan(int angle)
 {
@@ -44,6 +48,40 @@ void rotate_tilt(int angle)
     i2c.write(0x02);
     i2c.write(angle);
     i2c.write(20);
+    i2c.endTransmission();
+  }
+  catch(Exception e)
+  {
+    i2c.endTransmission();
+  }
+}
+
+void motor_r(int duty)
+{
+  int send_duty = Math.min(Math.max(duty/2+100, 0), 200);
+  try
+  {
+    i2c.beginTransmission(0x25);
+    i2c.write(0x02);
+    i2c.write(0x02);
+    i2c.write(send_duty);
+    i2c.endTransmission();
+  }
+  catch(Exception e)
+  {
+    i2c.endTransmission();
+  }
+}
+
+void motor_l(int duty)
+{
+  int send_duty = Math.min(Math.max(duty/2+100, 0), 200);
+  try
+  {
+    i2c.beginTransmission(0x25);
+    i2c.write(0x02);
+    i2c.write(0x01);
+    i2c.write(send_duty);
     i2c.endTransmission();
   }
   catch(Exception e)
@@ -84,6 +122,16 @@ void setup() {
   oscP5 = new OscP5(this, myProperties);
   myAddress = new NetAddress("192.168.100.118", 1234);
   oscP5.plug(this, "getData", "/a");
+  oscP5.plug(this, "getCon", "/c");
+}
+
+public void getCon(int _lh_ud, int _lh_rl, int _rh_ud, int _rh_rl) {
+  lh_ud = _lh_ud;
+  lh_rl= _lh_rl;
+  rh_ud= _rh_ud;
+  rh_rl= _rh_rl;
+
+  //println("received");
 }
 
 public void getData(float a, float p, float r) {
@@ -103,6 +151,21 @@ float roll_buf;
 byte cnt = 0;
 
 void draw() {
+      print("lh_ud: ");
+      print(lh_ud);
+      print(" lh_rl: ");
+      print(lh_rl);
+      print(" rh_ud: ");
+      print(rh_ud);
+      print(" rh_rl: ");
+      println(rh_rl);
+      
+      motor_r(rh_ud);
+      motor_l(lh_ud);
+}
+
+void drawa() {
+
   cnt++;
   background(0);
   if (cnt%3==0) {
