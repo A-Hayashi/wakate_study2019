@@ -47,7 +47,7 @@ void setup() {
 
   size(600, 600, P3D);
   smooth();
-  frameRate(250);
+  frameRate(20);
 
 
   OscProperties myProperties = new OscProperties();

@@ -1,4 +1,4 @@
-import oscP5.*;
+import oscP5.*; //<>//
 import netP5.*;
 
 import java.io.*;
@@ -58,12 +58,12 @@ void rotate_tilt(int angle)
 
 void motor_r(int duty)
 {
-  int send_duty = Math.min(Math.max(duty/2+100, 0), 200);
+  int send_duty = Math.min(Math.max(duty*2/3+100, 0), 200);
   try
   {
     i2c.beginTransmission(0x25);
     i2c.write(0x02);
-    i2c.write(0x02);
+    i2c.write(0x01);
     i2c.write(send_duty);
     i2c.endTransmission();
   }
@@ -75,12 +75,12 @@ void motor_r(int duty)
 
 void motor_l(int duty)
 {
-  int send_duty = Math.min(Math.max(duty/2+100, 0), 200);
+  int send_duty = Math.min(Math.max(duty*2/3+100, 0), 200);
   try
   {
     i2c.beginTransmission(0x25);
     i2c.write(0x02);
-    i2c.write(0x01);
+    i2c.write(0x02);
     i2c.write(send_duty);
     i2c.endTransmission();
   }

@@ -7,8 +7,8 @@
 #define PS2_SEL 10
 PS_PAD PAD(PS2_SEL);
 
-static const byte PORT_M1  = 0;   //左
-static const byte PORT_M2  = 1;   //右
+static const byte PORT_M1  = 0;   //右
+static const byte PORT_M2  = 1;   //左
 
 VarSpeedServo ServoPan;
 VarSpeedServo ServoTilt;
@@ -115,8 +115,8 @@ void servo_control()
 
 void motor_control()
 {
-  DCMotor(PORT_M1, MotorL_Duty);
-  DCMotor(PORT_M2, MotorR_Duty);
+  DCMotor(PORT_M1, MotorR_Duty);
+  DCMotor(PORT_M2, MotorL_Duty);
 
   Serial.print("\tMotorR_Duty: ");
   Serial.print(MotorR_Duty);
@@ -284,10 +284,10 @@ void receiveEvent(int howMany) {
 #endif
       switch (motor) {
         case 1:
-          MotorL_Duty = (int)duty - 100;
+          MotorR_Duty = (int)duty - 100;
           break;
         case 2:
-          MotorR_Duty = (int)duty - 100;
+          MotorL_Duty = (int)duty - 100;
           break;
         default:
           break;
