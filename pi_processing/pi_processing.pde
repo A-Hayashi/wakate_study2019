@@ -194,7 +194,7 @@ synchronized void draw() {
   if ((cnt+2)%3==0) {
     motor_control(rh_ud, lh_ud);
   }
-  
+
   String dispText =
     String.format( "Azimuth:  %f\n", azimuth) +
     String.format( "Pitch:  %f\n", pitch) +
@@ -205,8 +205,8 @@ synchronized void draw() {
     String.format( "lh_rl:  %d\n", lh_rl)+
     String.format( "rh_ud:  %d\n", rh_ud)+
     String.format( "rh_ud:  %d\n", rh_rl);
-  //image(video, 0, 0, width, height);
-  //text( dispText, 0, 0, width, height);
+    image(video, 0, 0, width, height);
+    text( dispText, 0, 0, width, height);
 
   String dispText2 =
     String.format( "Azimuth:  %f  ", azimuth) +
