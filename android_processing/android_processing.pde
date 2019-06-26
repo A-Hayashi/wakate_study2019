@@ -26,13 +26,16 @@ float roll;
 
 PImage video;
 OscP5 oscP5;
+OscP5 oscP5_py;
+
 NetAddress myAddress;
+NetAddress myAddress_py;
 
 class SensorCatch implements SensorEventListener {
   public void onSensorChanged(SensorEvent sensorEvent) {
     float[] I = new float[16];
     float[] R = new float[16];
-    float orientation[] = new float[3]; 
+    float orientation[] = new float[3];
 
     switch(sensorEvent.sensor.getType()) {
 
@@ -91,16 +94,22 @@ void setup() {
   stroke(255);
 
   OscProperties myProperties = new OscProperties();
-  myProperties.setDatagramSize(100000); 
-  myProperties.setListeningPort(1234);
+  myProperties.setDatagramSize(100000);
+  myProperties.setListeningPort(1221);
   oscP5 = new OscP5(this, myProperties);
-  myAddress = new NetAddress("192.168.100.11", 1222);
+  myAddress = new NetAddress("192.168.100.11", 1220);
   oscP5.plug(this, "getData", "/b");
+
+  OscProperties myProperties_py = new OscProperties();
+  myProperties_py.setDatagramSize(100000);
+  myProperties_py.setListeningPort(1234);
+  oscP5_py = new OscP5(this, myProperties);
+  myAddress_py = new NetAddress("192.168.100.11", 1222);
 }
 
 public void getData(byte[] data) {
-  ByteArrayInputStream bis=new ByteArrayInputStream(data); 
-  Bitmap bimg = BitmapFactory.decodeStream(bis); 
+  ByteArrayInputStream bis=new ByteArrayInputStream(data);
+  Bitmap bimg = BitmapFactory.decodeStream(bis);
 
   synchronized(this) {
     video=new PImage(bimg.getWidth(), bimg.getHeight(), PConstants.RGB);
@@ -125,31 +134,31 @@ void draw() {
     println("video is null");
   }
 
-  float ut = sqrt(sq(magneticValues[0]) 
-    + sq(magneticValues[1]) 
+  float ut = sqrt(sq(magneticValues[0])
+    + sq(magneticValues[1])
     + sq(magneticValues[2]));
 
-  String dispText 
-    = String.format( 
+  String dispText
+    = String.format(
     "加速度\n X:%s Y:%s Z:%s\n\n"
     +"地磁気\n X:%s Y:%s Z:%s\n"
     +"地磁気の大きさ:%s\n\n"
 
     +"Azimuth:\t%s\n"
     +"Pitch:\t%s\n"
-    +"Roll:\t%s\n", 
+    +"Roll:\t%s\n",
 
-    nfs(accelerometerValues[0], 2, 2), 
-    nfs(accelerometerValues[1], 2, 2), 
-    nfs(accelerometerValues[2], 2, 2), 
+    nfs(accelerometerValues[0], 2, 2),
+    nfs(accelerometerValues[1], 2, 2),
+    nfs(accelerometerValues[2], 2, 2),
 
-    nfs(magneticValues[0], 2, 2), 
-    nfs(magneticValues[1], 2, 2), 
-    nfs(magneticValues[2], 2, 2), 
-    nfs(ut, 2, 2), 
+    nfs(magneticValues[0], 2, 2),
+    nfs(magneticValues[1], 2, 2),
+    nfs(magneticValues[2], 2, 2),
+    nfs(ut, 2, 2),
 
-    nfs(azimuth, 2, 2), 
-    nfs(pitch, 2, 2), 
+    nfs(azimuth, 2, 2),
+    nfs(pitch, 2, 2),
     nfs(roll, 2, 2)
     );
 
@@ -175,8 +184,8 @@ public class SendAsyncTask extends AsyncTask<Float, Integer, Boolean> {
     myMessage.add(pitch);
     myMessage.add(roll);
 
-    if (myAddress!=null) {
-      oscP5.send(myMessage, myAddress);
+    if (myAddress_py!=null) {
+      oscP5_py.send(myMessage, myAddress_py);
     }
 
     return true;

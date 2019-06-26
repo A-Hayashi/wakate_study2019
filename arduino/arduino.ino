@@ -13,6 +13,8 @@ static const byte PORT_M2  = 1;   //左
 VarSpeedServo ServoPan;
 VarSpeedServo ServoTilt;
 
+#define DEBUG2
+
 int MotorR_Duty = 0;
 int MotorL_Duty = 0;
 int PanAngle = 90;
@@ -45,7 +47,7 @@ void ps_pad_test()
   int rx = PAD.read(PS_PAD::ANALOG_RX);
   int ry = PAD.read(PS_PAD::ANALOG_RY);
   int buttons = PAD.read(PS_PAD::BUTTONS);
-
+#ifdef DEBUG2
   Serial.print("LX:");
   Serial.print(lx);
   Serial.print("\tLY:");
@@ -57,6 +59,7 @@ void ps_pad_test()
   Serial.print("\tBUTTONS:");
   Serial.print(buttons, HEX);
   Serial.print("\n");
+#endif
 }
 
 void servo_motor_test()
@@ -101,7 +104,7 @@ void servo_control()
 {
   ServoPan.write(PanAngle, PanSpeed);
   ServoTilt.write(TiltAngle, TiltSpeed);
-
+#ifdef DEBUG2
   Serial.print("PanAngle: ");
   Serial.print(PanAngle);
   Serial.print("\tPanSpeed: ");
@@ -111,18 +114,20 @@ void servo_control()
   Serial.print("\tTiltSpeed: ");
   Serial.print(TiltSpeed);
   //  Serial.print("\n");
+#endif
 }
 
 void motor_control()
 {
   DCMotor(PORT_M1, MotorR_Duty);
   DCMotor(PORT_M2, MotorL_Duty);
-
+#ifdef DEBUG2
   Serial.print("\tMotorR_Duty: ");
   Serial.print(MotorR_Duty);
   Serial.print("\tMotorL_Duty: ");
   Serial.print(MotorL_Duty);
   Serial.print("\n");
+#endif
 }
 
 void loop() {
@@ -165,7 +170,7 @@ void InitDCMotorPort(byte connector)
 
 void DCMotor(byte connector, int rotation)
 {
-#ifdef DEBUG
+#ifdef DEBUG3
   if (connector == PORT_M1) {
     Serial.print("LEFT: ");
   } else {
@@ -285,9 +290,17 @@ void receiveEvent(int howMany) {
       switch (motor) {
         case 1:
           MotorR_Duty = (int)duty - 100;
+#ifdef DEBUG
+          Serial.print(" duty2: ");
+          Serial.println(MotorR_Duty);
+#endif
           break;
         case 2:
           MotorL_Duty = (int)duty - 100;
+#ifdef DEBUG
+          Serial.print(" duty2: ");
+          Serial.println(MotorL_Duty);
+#endif
           break;
         default:
           break;
