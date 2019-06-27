@@ -17,6 +17,8 @@ import math
 from pythonosc import dispatcher
 from pythonosc import osc_server
 
+import RPi.GPIO as GPIO
+
 attitude = {}
 attitude['azimuth'] = 0
 attitude['pitch'] = 0
@@ -171,9 +173,18 @@ def control_loop():
         l_motor(motor['left'])
         r_motor(motor['right'])
         
+        if (pad['8'] == 1):
+            print("reset")
+            GPIO.output(7, 0)
+            time.sleep(1)
+            GPIO.output(7, 1)
         # print(servo)
         # print(motor)
         time.sleep(0.1)
+
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(7, GPIO.OUT)
+GPIO.output(7, 1)
 
 init_i2c()
 
