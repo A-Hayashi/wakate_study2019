@@ -9,6 +9,7 @@
 #define IN4 12
 #define ENB 3
 
+//#define DEBUG
 VarSpeedServo myservo0;
 VarSpeedServo myservo1;
 
@@ -44,25 +45,25 @@ void loop() {
   //    myservo0.write(90, 40);
   //    delay(2000);
 
-  //    Serial.println("Motor0 Forward");
-  //    motor0.setSpeed(255);
-  //    motor0.forward();
-  //    delay(2000);
-  //    Serial.println("Motor0 Backward");
-  //    motor0.setSpeed(100);
-  //    motor0.backward();
-  //    delay(2000);
-  //    motor0.stop();
+  //      Serial.println("Motor0 Forward");
+  //      motor0.setSpeed(255);
+  //      motor0.forward();
+  //      delay(2000);
+  //      Serial.println("Motor0 Backward");
+  //      motor0.setSpeed(100);
+  //      motor0.backward();
+  //      delay(2000);
+  //      motor0.stop();
   //
-  //    Serial.println("Motor1 Forward");
-  //    motor1.setSpeed(255);
-  //    motor1.forward();
-  //    delay(2000);
-  //    Serial.println("Motor1 Backward");
-  //    motor1.setSpeed(100);
-  //    motor1.backward();
-  //    delay(2000);
-  //    motor1.stop();
+  //      Serial.println("Motor1 Forward");
+  //      motor1.setSpeed(255);
+  //      motor1.forward();
+  //      delay(2000);
+  //      Serial.println("Motor1 Backward");
+  //      motor1.setSpeed(100);
+  //      motor1.backward();
+  //      delay(2000);
+  //      motor1.stop();
 }
 
 void i2c_init()
@@ -73,22 +74,24 @@ void i2c_init()
 }
 
 void receiveEvent(int howMany) {
-  Serial.println("receiveEvent");
   byte cmd = Wire.read();
+#ifdef DEBUG
+  Serial.println("receiveEvent");
   Serial.print("cmd:");
   Serial.println(cmd);
-
+#endif
   if (cmd == 0x02) {
     if (howMany == 3) {
       byte motor = Wire.read();
       uint8_t buf = Wire.read();
 
       int speed = (int)buf - 100;
+#ifdef DEBUG
       Serial.print("motor: ");
       Serial.print(motor);
       Serial.print(" speed: ");
       Serial.println(speed);
-
+#endif
       speed = map(speed, -100, 100, -255, 255);
       if (motor == 1) {
         if (speed > 0) {
@@ -121,17 +124,19 @@ void receiveEvent(int howMany) {
       byte servo = Wire.read();
       byte angle = Wire.read();
       byte speed = Wire.read();
+#ifdef DEBUG
       Serial.print("servo: ");
       Serial.print(servo);
       Serial.print(" angle: ");
       Serial.print(angle);
       Serial.print(" speed: ");
       Serial.println(speed);
+#endif
       switch (servo) {
-        case 0:
+        case 1:
           myservo0.write(angle, speed);
           break;
-        case 1:
+        case 2:
           myservo1.write(angle, speed);
           break;
       }
@@ -141,5 +146,7 @@ void receiveEvent(int howMany) {
 
 // マスターからのリクエストに対するデータ送信
 void requestEvent() {
+#ifdef DEBUG
   Serial.println("requestEvent");
+#endif
 }

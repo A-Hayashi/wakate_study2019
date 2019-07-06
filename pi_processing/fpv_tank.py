@@ -34,18 +34,18 @@ def init_i2c():
     print("bus restart") 
 
 def r_motor(duty):
-    duty = min([max([duty, -100]), 100])
+    duty = min([max([-duty, -100]), 100])
     duty = duty + 100
     try:
-        bus.write_i2c_block_data(0x25, 0x02, [0x01, duty])
+        bus.write_i2c_block_data(0x25, 0x02, [0x01, int(duty)])
     except:
         init_i2c()
 
 def l_motor(duty):
-    duty = min([max([duty, -100]), 100])
-    duty = duty+100
+    duty = min([max([-duty, -100]), 100])
+    duty = duty + 100
     try:
-        bus.write_i2c_block_data(0x25, 0x02, [0x02, duty])
+        bus.write_i2c_block_data(0x25, 0x02, [0x02, int(duty)])
     except:
         init_i2c()
 
@@ -148,8 +148,8 @@ def control_loop():
 
     servo_on = False
     while True:
-        motor['left'] = pad['y1']
-        motor['right'] = pad['y2']
+        motor['left'] = int(pad['y1'])
+        motor['right'] = int(pad['y2'])
 
         if (- 150 <= attitude['azimuth'] <= 150):
             servo['pan'] = -attitude['azimuth']
@@ -179,7 +179,7 @@ def control_loop():
             time.sleep(1)
             GPIO.output(7, 1)
         # print(servo)
-        # print(motor)
+        print(motor)
         time.sleep(0.1)
 
 GPIO.setmode(GPIO.BOARD)
@@ -196,3 +196,8 @@ t1.start()
 time.sleep(1)
 t2.start()
 start_osc_server()
+
+# r_motor(-30)
+# l_motor(-30)
+# pan_servo(40)
+# tilt_servo(-40)

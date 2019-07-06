@@ -1,4 +1,4 @@
-import oscP5.*; //<>// //<>//
+import oscP5.*; //<>//
 import netP5.*;
 
 import java.io.*;
@@ -44,7 +44,7 @@ void setup() {
 void draw() {
   background(0);
   video_control(video);
-  image(video, 0, 0, width, height);
+  //image(video, 0, 0, width, height);
 }
 
 
